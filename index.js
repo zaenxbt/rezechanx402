@@ -1,4 +1,33 @@
+import { useEffect, useState } from "react";
+
 export default function Home() {
+
+  const [mints, setMints] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function fetchMints() {
+    try {
+      const res = await fetch(
+        `https://api.zora.co/discovery/mints?contractAddress=0xa1dc9aaeb9a3e2202053099e55984054b6cb15d0`
+      );
+
+      const data = await res.json();
+      setMints(data?.mints || []);
+    } catch (err) {
+      console.error("Mint Tracker Error:", err);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchMints();
+
+    // Auto-refresh every 15 sec
+    const interval = setInterval(fetchMints, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <main className="bg-black text-white min-h-screen">
 
@@ -120,6 +149,39 @@ export default function Home() {
           <div className="bg-white/5 p-6 rounded-xl"><h3 className="font-semibold text-xl mb-2">Phase 2 — x402 Integrations</h3><p className="opacity-70">Encrypted meme interactions, private swaps, zk-powered utilities.</p></div>
           <div className="bg-white/5 p-6 rounded-xl"><h3 className="font-semibold text-xl mb-2">Phase 3 — Meme Privacy Ecosystem</h3><p className="opacity-70">Full privacy-native meme hub, creator tools, encrypted feed, and more.</p></div>
         </div>
+      </section>
+
+      {/* LIVE MINT TRACKER */}
+      <section className="px-6 py-24 border-t border-white/10 bg-black/40">
+        <h2 className="text-4xl font-bold text-center mb-10">
+          Live Mint Tracker
+        </h2>
+
+        {loading ? (
+          <p className="text-center opacity-60 text-lg">Loading latest mints...</p>
+        ) : mints.length === 0 ? (
+          <p className="text-center opacity-60 text-lg">
+            No mints yet — be the first!
+          </p>
+        ) : (
+          <div className="max-w-2xl mx-auto space-y-4">
+            {mints.map((mint, i) => (
+              <div
+                key={i}
+                className="bg-white/5 p-4 rounded-xl flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-semibold">{mint?.owner || "Unknown"}</p>
+                  <p className="opacity-60 text-sm">
+                    {new Date(mint?.timestamp).toLocaleString()}
+                  </p>
+                </div>
+
+                <span className="text-green-400 font-bold">Minted ✔</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* FOOTER */}
